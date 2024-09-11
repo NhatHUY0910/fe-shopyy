@@ -34,7 +34,7 @@ const PaymentPage = () => {
 
     const handlePlaceOrder = () => {
         console.log('Place order clicked');
-        // Implement order placement logic here
+        // Implement order placement logic here 
     };
 
     const handleChangeInfo = () => {

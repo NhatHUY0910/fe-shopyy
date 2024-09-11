@@ -1,12 +1,14 @@
 import React from 'react';
 import { Table, Radio, Button } from 'antd';
 import { CreditCardOutlined, WalletOutlined, DollarOutlined } from '@ant-design/icons';
+import Image from "next/image";
 
 interface Product {
     id: number;
     name: string;
     price: number;
     quantity: number;
+    imageUrl: String;
 }
 
 interface PaymentSummaryProps {
@@ -20,8 +22,20 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({products, shippingFee, o
     const columns = [
         {
             title: 'Sản phẩm',
-            dataIndex: 'name',
-            key: 'name',
+            dataIndex: 'productName',
+            key: 'product',
+            render: (text: string, record: Product) => (
+                <div className="flex items-center">
+                    <Image
+                        src={`http://localhost:8080/images/${record.imageUrl}`}
+                        alt={text}
+                        width={100}
+                        height={100}
+                        className="mr-4"
+                    />
+                    <span>{text}</span>
+                </div>
+            ),
         },
         {
             title: 'Đơn giá',

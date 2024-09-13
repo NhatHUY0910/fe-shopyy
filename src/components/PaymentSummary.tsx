@@ -4,7 +4,7 @@ import { CreditCardOutlined, WalletOutlined, DollarOutlined } from '@ant-design/
 import Image from "next/image";
 
 interface Product {
-    id: number;
+    productId: number;
     name: string;
     price: number;
     quantity: number;
@@ -18,7 +18,12 @@ interface PaymentSummaryProps {
     onPlaceOrder: () => void;
 }
 
-const PaymentSummary: React.FC<PaymentSummaryProps> = ({products, shippingFee, onPaymentMethodChange, onPlaceOrder,}) => {
+const PaymentSummary: React.FC<PaymentSummaryProps> = ({
+    products,
+    shippingFee,
+    onPaymentMethodChange,
+    onPlaceOrder,
+}) => {
     const columns = [
         {
             title: 'Sản phẩm',
@@ -66,14 +71,14 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({products, shippingFee, o
 
             <div>
                 <h2 className="text-xl font-semibold mb-2">Phương thức thanh toán</h2>
-                <Radio.Group onChange={(e) => onPaymentMethodChange(e.target.value)} defaultValue="creditCard">
-                    <Radio value="creditCard">
+                <Radio.Group onChange={(e) => onPaymentMethodChange(e.target.value)} defaultValue="CREDIT_CARD">
+                    <Radio value="CREDIT_CARD">
                         <CreditCardOutlined /> Thẻ tín dụng/ghi nợ
                     </Radio>
-                    <Radio value="vnpay">
+                    <Radio value="VNPAY">
                         <WalletOutlined /> Ví VNPay
                     </Radio>
-                    <Radio value="cod">
+                    <Radio value="COD">
                         <DollarOutlined /> Thanh toán khi nhận hàng
                     </Radio>
                 </Radio.Group>

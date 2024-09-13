@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PaymentForm from '@/components/PaymentInformationForm';
 import PaymentSummary from '@/components/PaymentSummary';
+import { message } from "antd";
+import { createOrder } from "@/services/orderService";
+import { useAuthContext } from "@/context/AuthContext"
 
 interface PaymentInfo {
     fullName: string;
@@ -11,15 +14,24 @@ interface PaymentInfo {
     address: string;
 }
 
+interface Product {
+    productId: number;
+    name: string;
+    price: number;
+    quantity: number;
+    imageUrl: string;
+}
+
 const PaymentPage = () => {
     const [showForm, setShowForm] = useState(true);
     const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
-    const [selectedProducts, setSelectedProducts] = useState([]);
+    const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+    const [paymentMethod, setPaymentMethod] = useState('cod');
     const router = useRouter();
 
     useEffect(() => {
-        // Fetch selected products from localStorage or API
         const products = JSON.parse(localStorage.getItem('selectedProducts') || '[]');
+        console.log('Parsed products from localStorage:', products);
         setSelectedProducts(products);
     }, []);
 
@@ -29,12 +41,46 @@ const PaymentPage = () => {
     };
 
     const handlePaymentMethodChange = (method: string) => {
-        console.log('Selected payment method:', method);
+        setPaymentMethod(method.toUpperCase());
     };
 
-    const handlePlaceOrder = () => {
-        console.log('Place order clicked');
-        // Implement order placement logic here 
+    const handlePlaceOrder = async () => {
+        if (!paymentInfo) {
+            message.error('Vui lòng nhập thông tin giao hàng')
+            return;
+        }
+
+        console.log('selectedProducts:', selectedProducts);
+        const orderData = {
+            fullName: paymentInfo.fullName,
+            phoneNumber: paymentInfo.phoneNumber,
+            address: paymentInfo.address,
+            // paymentMethod,
+            paymentMethod: paymentMethod.toUpperCase(), // Đảm bảo gửi giá trị chữ hoa
+            orderItems: selectedProducts.map(product => ({
+                productId: product.productId,
+                quantity: product.quantity
+            }))
+        };
+
+        try {
+            const response = await createOrder(orderData);
+
+            if (paymentMethod.toUpperCase() === 'VNPAY' && response.paymentUrl) {
+                // Redirect to VNPay payment URL
+                window.location.href = response.paymentUrl;
+            } else if (paymentMethod.toUpperCase() === 'COD') {
+                // Handle COD payment
+                message.success('Đặt hàng thành công! Bạn sẽ thanh toán khi nhận hàng.');
+                router.push('/order-success');
+            } else {
+                // Handle credit/debit card payment (not implemented)
+                console.log('Thanh toán bằng thẻ tín dụng/ghi nợ chưa được triển khai');
+                message.info('Phương thức thanh toán này chưa được hỗ trợ.');
+            }
+        } catch (error) {
+            message.error('Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.');
+        }
     };
 
     const handleChangeInfo = () => {

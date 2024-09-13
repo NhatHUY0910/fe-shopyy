@@ -63,32 +63,6 @@ const CartItemList = () => {
         }
 
         try {
-            // const item = cartItems.find(item => item.productId === productId);
-            // console.log("Found item:", item);
-            // if (!item) return;
-            //
-            // const maxQuantity = (item.quantity || 0) + (item.stockQuantity || 0);
-            // // const maxQuantity = item.quantity + item.stockQuantity;
-            // console.log(`Item quantity: ${item.quantity}, Stock quantity: ${item.stockQuantity}, Max Quantity: ${maxQuantity}`);
-            // console.log(`Product ID: ${productId}, New Value: ${value}, Max Quantity: ${maxQuantity}`);
-            //
-            // if (item.quantity > maxQuantity) {
-            //     console.log('Attempting to show warning message');
-            //     alert(`Số lượng tối đa mà bạn có thể đặt mua sản phẩm này là ${maxQuantity}`);
-            //     return;
-            // }
-            //
-            // const numericValue = Number(value);
-            // if (isNaN(numericValue)) {
-            //     console.error('Invalid input value:', value);
-            //     return;
-            // }
-            //
-            // if (numericValue > maxQuantity) {
-            //     message.warning(`Số lượng tối đa mà bạn có thể đặt mua sản phẩm này là ${maxQuantity}`);
-            //     return;
-            // }
-
             const response = await fetch(`http://localhost:8080/api/cart/update`, {
                 method: 'POST',
                 headers: {

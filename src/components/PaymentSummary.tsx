@@ -62,24 +62,29 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
 
     const totalAmount = products.reduce((sum, product) => sum + product.price * product.quantity, 0);
 
+    const handleTermsClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault();
+        console.log("You are clicking to Điều khoản Shopyy")
+    }
+
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-xl font-semibold mb-2">Sản phẩm đã chọn</h2>
-                <Table columns={columns} dataSource={products} pagination={false} />
+                <h2 className="text-xl font-semibold mb-2">Sản phẩm</h2>
+                <Table columns={columns} dataSource={products} pagination={false}/>
             </div>
 
             <div>
                 <h2 className="text-xl font-semibold mb-2">Phương thức thanh toán</h2>
                 <Radio.Group onChange={(e) => onPaymentMethodChange(e.target.value)} defaultValue="CREDIT_CARD">
                     <Radio value="CREDIT_CARD">
-                        <CreditCardOutlined /> Thẻ tín dụng/ghi nợ
+                        <CreditCardOutlined/> Thẻ tín dụng/ghi nợ
                     </Radio>
                     <Radio value="VNPAY">
-                        <WalletOutlined /> Ví VNPay
+                        <WalletOutlined/> Ví VNPay
                     </Radio>
                     <Radio value="COD">
-                        <DollarOutlined /> Thanh toán khi nhận hàng
+                        <DollarOutlined/> Thanh toán khi nhận hàng
                     </Radio>
                 </Radio.Group>
             </div>
@@ -93,15 +98,30 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
                     <span>Phí vận chuyển:</span>
                     <span>₫{shippingFee.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between font-semibold">
-                    <span>Tổng thanh toán:</span>
-                    <span>₫{(totalAmount + shippingFee).toFixed(2)}</span>
+                <div className="flex justify-between items-center mb-4">
+                    <span className="font-semibold">Tổng thanh toán:</span>
+                    <span className="text-xl font-bold text-red-500">
+                        ₫{(totalAmount + shippingFee).toFixed(2)}
+                    </span>
+                </div>
+                <div className="flex flex-col items-end">
+                    <p className="text-sm mb-2">
+                        Nhấn &quot;Đặt hàng&quot; đồng nghĩa với việc bạn đồng ý tuân theo{' '}
+                        <a href="#" onClick={handleTermsClick} className="text-blue-500 hover:underline">
+                            Điều khoản Shopyy
+                        </a>
+                    </p>
+                    <Button
+                        type="primary"
+                        size="large"
+                        onClick={onPlaceOrder}
+                        className="bg-red-500 hover:bg-red-600 border-none"
+                        style={{width: '150px'}}
+                    >
+                        Đặt hàng
+                    </Button>
                 </div>
             </div>
-
-            <Button type="primary" size="large" onClick={onPlaceOrder} className="w-full">
-                Đặt hàng
-            </Button>
         </div>
     );
 };

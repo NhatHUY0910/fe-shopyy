@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import HeaderPayment from "@/components/HeaderPayment";
 import PaymentForm from '@/components/PaymentInformationForm';
 import PaymentSummary from '@/components/PaymentSummary';
 import { message } from "antd";
@@ -88,35 +89,38 @@ const PaymentPage = () => {
     };
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Thanh toán</h1>
+        <>
+            <HeaderPayment/>
+            <div className="container mx-auto p-4">
+                <h1 className="text-2xl font-bold mb-4">Thanh toán</h1>
 
-            {showForm && <PaymentForm onSubmit={handleFormSubmit} />}
+                {showForm && <PaymentForm onSubmit={handleFormSubmit}/>}
 
-            {!showForm && paymentInfo && (
-                <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-2">Thông tin giao hàng</h2>
-                    <p><strong>Họ tên:</strong> {paymentInfo.fullName}</p>
-                    <p><strong>Số điện thoại:</strong> {paymentInfo.phoneNumber}</p>
-                    <p><strong>Địa chỉ:</strong> {paymentInfo.address}</p>
-                    <button
-                        onClick={handleChangeInfo}
-                        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                        Thay đổi
-                    </button>
-                </div>
-            )}
+                {!showForm && paymentInfo && (
+                    <div className="mb-6">
+                        <h2 className="text-xl font-semibold mb-2">Thông tin giao hàng</h2>
+                        <p><strong>Họ tên:</strong> {paymentInfo.fullName}</p>
+                        <p><strong>Số điện thoại:</strong> {paymentInfo.phoneNumber}</p>
+                        <p><strong>Địa chỉ:</strong> {paymentInfo.address}</p>
+                        <button
+                            onClick={handleChangeInfo}
+                            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                            Thay đổi
+                        </button>
+                    </div>
+                )}
 
-            {!showForm && (
-                <PaymentSummary
-                    products={selectedProducts}
-                    shippingFee={30000}
-                    onPaymentMethodChange={handlePaymentMethodChange}
-                    onPlaceOrder={handlePlaceOrder}
-                />
-            )}
-        </div>
+                {!showForm && (
+                    <PaymentSummary
+                        products={selectedProducts}
+                        shippingFee={30000}
+                        onPaymentMethodChange={handlePaymentMethodChange}
+                        onPlaceOrder={handlePlaceOrder}
+                    />
+                )}
+            </div>
+        </>
     );
 };
 

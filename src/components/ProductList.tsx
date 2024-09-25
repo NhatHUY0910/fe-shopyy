@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuthContext } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { message } from 'antd';
+import {Button, message, Modal} from 'antd';
+import CreateProductForm from "@/components/CreateProductForm";
 
 interface Product {
     id: number;
@@ -23,31 +24,32 @@ const ProductList: React.FC = () => {
     const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
     const { user } = useAuthContext();
     const router = useRouter();
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const response = await fetch('http://localhost:8080/api/products', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    },
-                });
-                if (!response.ok) {
-                    throw new Error('Failed to fetch products');
-                }
-                const data = await response.json();
-                setProducts(data);
-                const initialQuantities = data.reduce((acc: { [key: number]: number }, product: Product) => {
-                    acc[product.id] = 1;
-                    return acc;
-                }, {});
-                setQuantities(initialQuantities);
-            } catch (error) {
-                console.error('Error fetching products:', error);
-            }
-        };
-
         fetchProducts();
+    }, []);
+
+    const fetchProducts = useCallback(async () => {
+        try {
+            const response = await fetch('http://localhost:8080/api/products', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+            });
+            if (!response.ok) {
+                throw new Error('Failed to fetch products');
+            }
+            const data = await response.json();
+            setProducts(data);
+            const initialQuantities = data.reduce((acc: { [key: number]: number }, product: Product) => {
+                acc[product.id] = 1;
+                return acc;
+            }, {});
+            setQuantities(initialQuantities);
+        } catch (error) {
+            console.error('Error fetching products:', error);
+        }
     }, []);
 
     const handleQuantityChange = (productId: number, newQuantity: number) => {
@@ -75,6 +77,23 @@ const ProductList: React.FC = () => {
         }
     };
 
+    const showModal = () => {
+        setIsModalVisible(true);
+    };
+
+    const handleCancel = () => {
+        setIsModalVisible(false);
+    };
+
+    const handleCreateProduct = async (newProduct: Product) => {
+        setProducts(prevProducts => [...prevProducts, newProduct]);
+        setIsModalVisible(false);
+    };
+
+    const handleAddNewProduct = () => {
+        router.push('/create-product');
+    }
+
     const handleAddToCart = async (productId: number) => {
         if (!user) {
             router.push('/login');
@@ -100,6 +119,13 @@ const ProductList: React.FC = () => {
 
             message.success('Product added to cart successfully');
 
+            // Update the local state to reflect the new stock quantity
+            setProducts(prevProducts => prevProducts.map(product =>
+                product.id === productId
+                    ? { ...product, stockQuantity: product.stockQuantity - quantities[productId] }
+                    : product
+            ));
+
             // Reset quantity to 1 after successful addition
             setQuantities(prev => ({ ...prev, [productId]: 1 }));
         } catch (error) {
@@ -110,7 +136,19 @@ const ProductList: React.FC = () => {
 
     return (
         <div className="container mx-auto px-4">
-            <h1 className="text-2xl font-bold my-4">Product List</h1>
+            <div className="flex justify-between items-center my-4">
+                <h1 className="text-2xl font-bold">Product List</h1>
+                <Button type="primary" onClick={showModal}>Thêm sản phẩm mới</Button>
+            </div>
+            <Modal
+                title="Tạo sản phẩm mới"
+                open={isModalVisible}
+                onCancel={handleCancel}
+                footer={null}
+                width={800}
+            >
+                <CreateProductForm onFinish={handleCreateProduct} />
+            </Modal>
             <table className="min-w-full bg-white">
                 <thead>
                 <tr>
@@ -135,12 +173,14 @@ const ProductList: React.FC = () => {
                         <td className="border px-4 py-2">{product.description || 'N/A'}</td>
                         <td className="border px-4 py-2">{product.producer || 'N/A'}</td>
                         <td className="border px-4 py-2">
-                            <img src={`http://localhost:8080/images/${product.imageUrl}`} alt={product.name} className="w-24 h-24 object-cover" />
+                            <img src={product.imageUrl} alt={product.name} className="w-24 h-24 object-cover"/>
                         </td>
                         <td className="border px-4 py-2">{product.category ? product.category.name : 'N/A'}</td>
                         <td className="border px-4 py-2">
                             <div className="flex items-center">
-                                <button onClick={() => handleDecreaseQuantity(product.id)} className="bg-gray-200 px-2 py-1 rounded">-</button>
+                                <button onClick={() => handleDecreaseQuantity(product.id)}
+                                        className="bg-gray-200 px-2 py-1 rounded">-
+                                </button>
                                 <input
                                     type="number"
                                     className="w-16 text-center mx-2"
@@ -149,9 +189,17 @@ const ProductList: React.FC = () => {
                                     min={1}
                                     max={product.stockQuantity}
                                 />
-                                <button onClick={() => handleIncreaseQuantity(product.id)} className="bg-gray-200 px-2 py-1 rounded">+</button>
+                                <button onClick={() => handleIncreaseQuantity(product.id)}
+                                        className="bg-gray-200 px-2 py-1 rounded">+
+                                </button>
                             </div>
-                            <button onClick={() => handleAddToCart(product.id)} className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Add to Cart</button>
+                            <button
+                                onClick={() => handleAddToCart(product.id)}
+                                className="mt-2 bg-blue-500 text-white px-4 py-2 rounded"
+                                disabled={product.stockQuantity < 1}
+                            >
+                                {product.stockQuantity < 1 ? 'Out of Stock' : 'Add to Cart'}
+                            </button>
                         </td>
                     </tr>
                 ))}

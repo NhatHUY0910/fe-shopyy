@@ -19,20 +19,30 @@ interface Product {
     };
 }
 
+interface PagedResponse {
+    content: Product[];
+    pageNumber: number;
+    pageSize: number;
+    totalElements: number;
+    totalPages: number;
+    last: boolean;
+}
+
 const ProductList: React.FC = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
     const { user } = useAuthContext();
     const router = useRouter();
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
 
-    useEffect(() => {
-        fetchProducts();
-    }, []);
-
-    const fetchProducts = useCallback(async () => {
+    const fetchProducts = useCallback(async (pageNumber: number) => {
+        if (isLoading) return;
+        setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/products', {
+            const response = await fetch(`http://localhost:8080/api/products/paginated?page=${pageNumber}&size=5`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
@@ -40,17 +50,34 @@ const ProductList: React.FC = () => {
             if (!response.ok) {
                 throw new Error('Failed to fetch products');
             }
-            const data = await response.json();
-            setProducts(data);
-            const initialQuantities = data.reduce((acc: { [key: number]: number }, product: Product) => {
+            const data: PagedResponse = await response.json();
+            if (pageNumber === 0) {
+                setProducts(data.content);
+            } else {
+                setProducts(prevProducts => [...prevProducts, ...data.content]);
+            }
+            setHasMore(!data.last);
+            setPage(data.pageNumber);
+
+            const newQuantities = data.content.reduce((acc: { [key: number]: number }, product: Product) => {
                 acc[product.id] = 1;
                 return acc;
             }, {});
-            setQuantities(initialQuantities);
+            setQuantities(prev => ({ ...prev, ...newQuantities }));
         } catch (error) {
             console.error('Error fetching products:', error);
+        } finally {
+            setIsLoading(false);
         }
     }, []);
+
+    useEffect(() => {
+        fetchProducts(0);
+    }, [fetchProducts]);
+
+    const loadMore = () => {
+        fetchProducts(page + 1);
+    };
 
     const handleQuantityChange = (productId: number, newQuantity: number) => {
         const product = products.find(p => p.id === productId);
@@ -89,10 +116,6 @@ const ProductList: React.FC = () => {
         setProducts(prevProducts => [...prevProducts, newProduct]);
         setIsModalVisible(false);
     };
-
-    const handleAddNewProduct = () => {
-        router.push('/create-product');
-    }
 
     const handleAddToCart = async (productId: number) => {
         if (!user) {
@@ -205,6 +228,13 @@ const ProductList: React.FC = () => {
                 ))}
                 </tbody>
             </table>
+            {hasMore && (
+                <div className="text-center my-4">
+                    <Button onClick={loadMore} loading={isLoading}>
+                        {isLoading ? 'Đang tải...' : 'Xem thêm'}
+                    </Button>
+                </div>
+            )}
         </div>
     );
 };

@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
-import Sidebar from '@/components/Sidebar';
+import Sidebar from '@/components/SidebarProfile';
 import ProfileForm from '@/components/ProfileForm';
 
 export default function ProfilePage() {

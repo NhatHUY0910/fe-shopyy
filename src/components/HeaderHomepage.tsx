@@ -2,16 +2,27 @@
 
 import {useRouter} from "next/navigation";
 import Link from "next/link"
+import { useState } from "react";
+import Image from "next/image";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {fab, faFacebook, faInstagram, faShopify} from "@fortawesome/free-brands-svg-icons";
-import {faBell, faCircleQuestion, faGlobe, faSearch, faShoppingCart, faUser} from "@fortawesome/free-solid-svg-icons";
+import {faBell, faCircleQuestion, faGlobe, faSearch, faShoppingCart, faUser, faSignOutAlt, faUserCircle} from "@fortawesome/free-solid-svg-icons";
+import {useAuth} from "@/hooks/useAuth";
 
 const HeaderHomepage = () => {
     const router = useRouter();
+    const { user, logout } = useAuth();
+    // const [showDropdown, setShowDropdown] = useState(false);
 
     const handleLogout = () => {
-        router.push('/login');
-    }
+        console.log("Logout functionality will be implemented later");
+        // setShowDropdown(false);
+    };
+
+    const handleProfileClick = () => {
+        router.push('/profile');
+        // setShowDropdown(false);
+    };
 
     return (
         <header className="bg-[#0866FF] text-white">
@@ -45,10 +56,50 @@ const HeaderHomepage = () => {
                             <FontAwesomeIcon icon={faGlobe} size="lg"></FontAwesomeIcon>
                             <span className="mr-2 ml-2">Tiếng Việt</span>
                         </Link>
-                        <Link href="#" className="flex items-center mr-4 hover:text-gray-200">
-                            <FontAwesomeIcon icon={faUser} size="lg"></FontAwesomeIcon>
-                            <span className="fas mr-2 ml-2">User Name</span>
-                        </Link>
+
+                        {user ? (
+                            <div className="relative group">
+                                <div className="flex items-center mr-4 hover:text-gray-200 cursor-pointer">
+                                    <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                        <Image
+                                            src={user.avatarUrl || '/placeholder-avatar.png'}
+                                            alt="User avatar"
+                                            fill
+                                            className="object-cover"
+                                            sizes="(max-width: 32px) 100vw, 32px"
+                                        />
+                                    </div>
+                                    <span className="mr-2 ml-2">{user.username || user.email}</span>
+                                </div>
+                                {/* Thêm một div "cầu nối" vô hình */}
+                                <div className="absolute top-full left-0 w-full h-2"></div>
+                                {/* Điều chỉnh vị trí của dropdown menu */}
+                                <div className="absolute right-0 top-[calc(100%+2px)] w-48 bg-white rounded-md shadow-lg z-10 hidden group-hover:block">
+                                    <div className="py-1">
+                                        <button
+                                            onClick={handleProfileClick}
+                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                        >
+                                            <FontAwesomeIcon icon={faUser} className="mr-2" />
+                                            Thông tin tài khoản
+                                        </button>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                        >
+                                            <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
+                                            Đăng xuất
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex items-center">
+                                <Link href="/register" className="mr-2 hover:text-gray-200">Đăng ký</Link>
+                                <span className="mr-2">|</span>
+                                <Link href="/login" className="hover:text-gray-200">Đăng nhập</Link>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

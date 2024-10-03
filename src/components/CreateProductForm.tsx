@@ -40,7 +40,6 @@ const CreateProductForm: React.FC<{ onFinish: (values: any) => void }> = ({ onFi
     };
 
     const handleFinish = async (values: any) => {
-        // Kiểm tra xem có giá trị nào bị thiếu hoặc không hợp lệ không
         if (!values.name || !values.price || !values.stockQuantity) {
             message.error('Please fill all required fields');
             return;

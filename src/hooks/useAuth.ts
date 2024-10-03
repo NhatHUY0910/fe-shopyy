@@ -4,7 +4,13 @@ import { useRouter } from 'next/navigation';
 interface User {
     id: string;
     email: string;
-    // Thêm các trường khác nếu cần
+    username?: string;
+    avatarUrl?: string;
+}
+
+interface UpdateUserData {
+    username?: string;
+    avatarFile?: File;
 }
 
 export const useAuth = () => {
@@ -45,6 +51,39 @@ export const useAuth = () => {
         }
     };
 
+    const updateProfile = async (updateData: UpdateUserData) => {
+        try {
+            const token = localStorage.getItem('token');
+            const formData = new FormData();
+
+            if (updateData.username) {
+                formData.append('username', updateData.username);
+            }
+            if (updateData.avatarFile) {
+                formData.append('avatarFile', updateData.avatarFile);
+            }
+
+            const response = await fetch('http://localhost:8080/api/users/profile', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData,
+            })
+
+            if (!response.ok) {
+                throw new Error('Update failed');
+            }
+
+            const updatedUser = await response.json();
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: 'Failed to update profile' };
+        }
+    }
+
     const logout = () => {
         localStorage.removeItem('user');
         localStorage.removeItem('token');
@@ -52,5 +91,5 @@ export const useAuth = () => {
         router.push('/login');
     };
 
-    return { user, loading, login, logout };
+    return { user, loading, login, logout, updateProfile };
 };

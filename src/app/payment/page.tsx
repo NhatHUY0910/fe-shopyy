@@ -34,7 +34,11 @@ const PaymentPage = () => {
         const products = JSON.parse(localStorage.getItem('selectedProducts') || '[]');
         console.log('Parsed products from localStorage:', products);
         setSelectedProducts(products);
-    }, []);
+        
+        if (products.length === 0) {
+            router.push('/error');
+        }
+    }, [router]);
 
     const handleFormSubmit = (values: PaymentInfo) => {
         setPaymentInfo(values);
@@ -90,11 +94,11 @@ const PaymentPage = () => {
 
     return (
         <>
-            <HeaderPayment/>
+            <HeaderPayment />
             <div className="container mx-auto p-4">
                 <h1 className="text-2xl font-bold mb-4">Thanh toán</h1>
 
-                {showForm && <PaymentForm onSubmit={handleFormSubmit}/>}
+                {showForm && <PaymentForm onSubmit={handleFormSubmit} />}
 
                 {!showForm && paymentInfo && (
                     <div className="mb-6">

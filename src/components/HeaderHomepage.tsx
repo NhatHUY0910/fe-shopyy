@@ -53,15 +53,15 @@ const HeaderHomepage = () => {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 py-2 flex items-center">
-                <div className="flex items-center">
+            <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+                <div className="flex items-center w-1/4">
                     <Link href="/" className="flex items-center">
-                        <FontAwesomeIcon icon={faShopify} size="4x"></FontAwesomeIcon>
+                        <FontAwesomeIcon icon={faShopify} size="4x" />
                         <span className="text-2xl font-bold">Shopyy</span>
                     </Link>
                 </div>
 
-                <div className="flex-grow mx-4">
+                <div className="w-[1500px]">
                     <form className="relative">
                         <input
                             type="text"
@@ -76,22 +76,24 @@ const HeaderHomepage = () => {
                     </form>
                 </div>
 
-                <div className="flex items-center">
-                    <Link href="/cart" className="mr-4">
+                <div className="flex items-center justify-end w-1/4">
+                    <Link href="/cart" className="mr-20">
                         <FontAwesomeIcon icon={faShoppingCart} size="2xl"></FontAwesomeIcon>
                     </Link>
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 py-2 text-sm">
-                <Link href="#" className="mr-4 hover:text-gray-200">Laptop gaming</Link>
-                <Link href="#" className="mr-4 hover:text-gray-200">Quần áo Châu Âu</Link>
-                <Link href="#" className="mr-4 hover:text-gray-200">Combo bàn phím + chuột</Link>
-                <Link href="#" className="mr-4 hover:text-gray-200">Điện thoại Samsung</Link>
-                <Link href="#" className="mr-4 hover:text-gray-200">Xe đạp thể thao</Link>
-                <Link href="#" className="mr-4 hover:text-gray-200">Giày sneaker</Link>
-                <Link href="#" className="mr-4 hover:text-gray-200">Tai nghe bluetooth</Link>
-                <Link href="#" className="mr-4 hover:text-gray-200">Máy cạo râu</Link>
+            <div className="container mx-auto px-4 py-2 text-sm justify-end">
+                <div className="ml-60">
+                    <Link href="#" className="mr-4 hover:text-gray-200">Laptop gaming</Link>
+                    <Link href="#" className="mr-4 hover:text-gray-200">Quần áo Châu Âu</Link>
+                    <Link href="#" className="mr-4 hover:text-gray-200">Combo bàn phím + chuột</Link>
+                    <Link href="#" className="mr-4 hover:text-gray-200">Điện thoại Samsung</Link>
+                    <Link href="#" className="mr-4 hover:text-gray-200">Xe đạp thể thao</Link>
+                    <Link href="#" className="mr-4 hover:text-gray-200">Giày sneaker</Link>
+                    <Link href="#" className="mr-4 hover:text-gray-200">Tai nghe bluetooth</Link>
+                    <Link href="#" className="mr-4 hover:text-gray-200">Máy cạo râu</Link>
+                </div>
             </div>
         </header>
     )

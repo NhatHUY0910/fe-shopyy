@@ -62,7 +62,7 @@ const HeaderHomepage = () => {
                                 <div className="flex items-center mr-4 hover:text-gray-200 cursor-pointer">
                                     <div className="w-8 h-8 rounded-full overflow-hidden relative">
                                         <Image
-                                            src={user.avatarUrl || '/placeholder-avatar.png'}
+                                            src={user.avatarUrl || '/placeholder-image.png'}
                                             alt="User avatar"
                                             fill
                                             className="object-cover"

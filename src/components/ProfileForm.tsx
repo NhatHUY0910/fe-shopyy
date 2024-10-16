@@ -15,7 +15,7 @@ const ProfileForm: React.FC = () => {
     const [profile, setProfile] = useState<UserProfile>({
         username: '',
         email: '',
-        avatarUrl: '/placeholder-avatar.png',
+        avatarUrl: '/placeholder-image.png',
     });
 
     const [isEditing, setIsEditing] = useState(false);
@@ -29,7 +29,7 @@ const ProfileForm: React.FC = () => {
             setProfile({
                 username: user.username || '',
                 email: user.email || '',
-                avatarUrl: user.avatarUrl || '/placeholder-avatar.png',
+                avatarUrl: user.avatarUrl || '/placeholder-image.png',
             });
             setNewUsername(user.username || '');
         }

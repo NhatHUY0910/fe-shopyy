@@ -243,7 +243,13 @@ const CartItemList = () => {
             key: 'product',
             render: (text: string, record: CartItem) => (
                 <div className="flex items-center">
-                    <Image src={`http://localhost:8080/images/${record.imageUrl}`} alt={text} width={100} height={100} className="mr-4" />
+                    <Image
+                        src={record.imageUrl ? `http://localhost:8080/images/${record.imageUrl}` : '/placeholder-image.png'}
+                        alt={text}
+                        width={100}
+                        height={100}
+                        className="mr-4"
+                    />
                     <span>{text}</span>
                 </div>
             ),

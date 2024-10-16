@@ -13,7 +13,7 @@ interface Product {
     stockQuantity: number;
     description: string;
     producer: string;
-    imageUrl: string;
+    imageUrls: string[];
     category: {
         name: string;
     };
@@ -196,7 +196,11 @@ const ProductList: React.FC = () => {
                         <td className="border px-4 py-2">{product.description || 'N/A'}</td>
                         <td className="border px-4 py-2">{product.producer || 'N/A'}</td>
                         <td className="border px-4 py-2">
-                            <img src={product.imageUrl} alt={product.name} className="w-24 h-24 object-cover"/>
+                            <img
+                                src={product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : '/placeholder-image.png'}
+                                alt={product.name}
+                                className="w-24 h-24 object-cover"
+                            />
                         </td>
                         <td className="border px-4 py-2">{product.category ? product.category.name : 'N/A'}</td>
                         <td className="border px-4 py-2">

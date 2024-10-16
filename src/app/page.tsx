@@ -5,11 +5,11 @@ import Footer from "@/components/Footer";
 export default function Home() {
   return (
           <div>
-              <HeaderHomepage/>
+              <HeaderHomepage />
               <main>
-                  <ProductList/>
+                  <ProductList />
               </main>
-            <Footer/>
+            <Footer />
           </div>
     );
 }

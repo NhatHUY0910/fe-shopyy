@@ -11,6 +11,10 @@ interface CartItem {
     price: number;
     quantity: number;
     stockQuantity: number;
+    selectedColorName?: string;
+    selectedSize?: string;
+    selectedWeight?: string;
+    variantInfo?: string;
 }
 
 const CartItemList = () => {
@@ -38,6 +42,7 @@ const CartItemList = () => {
                 throw new Error('Failed to fetch cart items');
             }
             const data = await response.json();
+            console.log('Cart data:', data)
             setCartItems(data.items);
             setLoading(false);
         } catch (error) {
@@ -285,6 +290,23 @@ const CartItemList = () => {
             title: 'Số Tiền',
             key: 'total',
             render: (text: string, record: CartItem) => `₫${(record.price * record.quantity).toFixed(2)}`,
+        },
+        {
+            title: 'Phân loại hàng',
+            key: 'variant',
+            render: (text: string, record: CartItem) => {
+                const variants = [];
+                if (record.selectedColorName) {
+                    variants.push(`Màu: ${record.selectedColorName}`);
+                }
+                if (record.selectedSize) {
+                    variants.push(`Size: ${record.selectedSize}`);
+                }
+                if (record.selectedWeight) {
+                    variants.push(`Khối lượng: ${record.selectedWeight}`);
+                }
+                return variants.length > 0 ? variants.join(', ') : 'Không có phân loại';
+            },
         },
         {
             title: 'Thao Tác',

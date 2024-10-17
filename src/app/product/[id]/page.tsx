@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Carousel } from 'antd';
+import { Carousel, message } from 'antd';
 
 interface ProductColor {
     id: number;
@@ -25,15 +25,20 @@ interface ProductDetail {
 
 const ProductDetailPage: React.FC = () => {
     const { id } = useParams();
+    const router = useRouter();
     const [product, setProduct] = useState<ProductDetail | null>(null);
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [selectedWeight, setSelectedWeight] = useState<string>('');
     const [quantity, setQuantity] = useState<number>(1);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [hoveredImageIndex, setHoveredImageIndex] = useState<number | null>(null);
+    const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
     useEffect(() => {
         const fetchProductDetail = async () => {
             try {
+                setLoading(true);
                 const response = await fetch(`http://localhost:8080/api/products/${id}/details`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -45,11 +50,16 @@ const ProductDetailPage: React.FC = () => {
                 const data = await response.json();
                 console.log("Received product data:", data);
                 setProduct(data);
+
+                // Đặt giá trị mặc định cho các thuộc tính nếu có
                 if (data.colors && data.colors.length > 0) setSelectedColor(data.colors[0].name);
                 if (data.availableSizes && data.availableSizes.length > 0) setSelectedSize(data.availableSizes[0]);
                 if (data.availableWeights && data.availableWeights.length > 0) setSelectedWeight(data.availableWeights[0]);
             } catch (error) {
                 console.error('Error fetching product details:', error);
+                message.error('Không thể tải thông tin sản phẩm');
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -60,45 +70,179 @@ const ProductDetailPage: React.FC = () => {
 
     const handleQuantityChange = (value: number) => {
         if (product) {
-            setQuantity(Math.max(1, Math.min(value, product.stockQuantity)));
+            const newQuantity = Math.max(1, Math.min(value, product.stockQuantity));
+            setQuantity(newQuantity);
         }
     };
 
-    const handleAddToCart = () => {
-        console.log('Tính năng này đang được phát triển');
+    const handleAddToCart = async () => {
+        // Kiểm tra người dùng đã đăng nhập chưa
+        if (!localStorage.getItem('token')) {
+            router.push('/login');
+            return;
+        }
+
+        // Kiểm tra việc chọn các thuộc tính bắt buộc
+        let missingAttributes = [];
+
+        if (product?.colors && product.colors.length > 0 && !selectedColor) {
+            missingAttributes.push('màu sắc');
+        }
+
+        if (product?.availableSizes && product.availableSizes.length > 0 && !selectedSize) {
+            missingAttributes.push('kích thước');
+        }
+
+        if (product?.availableWeights && product.availableWeights.length > 0 && !selectedWeight) {
+            missingAttributes.push('trọng lượng');
+        }
+
+        if (missingAttributes.length > 0) {
+            message.error(`Vui lòng chọn ${missingAttributes.join(', ')} cho sản phẩm`);
+            return;
+        }
+
+        // Kiểm tra số lượng
+        if (!quantity || quantity < 1) {
+            message.error('Vui lòng chọn số lượng hợp lệ');
+            return;
+        }
+
+        if (product && quantity > product.stockQuantity) {
+            message.error('Số lượng sản phẩm vượt quá số lượng trong kho');
+            return;
+        }
+
+        try {
+            const selectedColorObj = product?.colors?.find(color => color.name === selectedColor);
+
+            const addToCartDto = {
+                productId: product?.id,
+                quantity: quantity,
+                colorId: selectedColorObj?.id || null,
+                size: selectedSize || null,
+                weight: selectedWeight || null
+            };
+
+            const response = await fetch('http://localhost:8080/api/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+                body: JSON.stringify(addToCartDto),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to add product to cart');
+            }
+
+            message.success('Sản phẩm đã được thêm vào giỏ hàng');
+
+            // Cập nhật lại số lượng sản phẩm còn lại
+            setProduct(prev => prev ? {
+                ...prev,
+                stockQuantity: prev.stockQuantity - quantity
+            } : null);
+
+            // Reset số lượng về 1
+            setQuantity(1);
+
+        } catch (error) {
+            console.error('Error adding product to cart:', error);
+            message.error('Không thể thêm sản phẩm vào giỏ hàng');
+        }
     };
 
     const handleBuyNow = () => {
         console.log('Chức năng này hiện chưa khả dụng');
+        message.info('Tính năng này đang được phát triển');
     };
 
+    // Hàm xử lý khi hover vào hình ảnh nhỏ
+    const handleThumbnailHover = (index: number) => {
+        setHoveredImageIndex(index);
+    };
+
+    // Hàm xử lý khi không còn hover
+    const handleThumbnailLeave = () => {
+        setHoveredImageIndex(null);
+    };
+
+    // Hàm xử lý khi click vào hình ảnh nhỏ
+    const handleThumbnailClick = (index: number) => {
+        setSelectedImageIndex(selectedImageIndex === index ? null : index);
+    };
+
+    // Hàm để xác định hình ảnh nào sẽ được hiển thị trong phần hình ảnh lớn
+    const getCurrentDisplayImage = (): string => {
+        if (!product || !product.imageUrls.length) return '';
+
+        if (hoveredImageIndex !== null) {
+            return product.imageUrls[hoveredImageIndex];
+        }
+
+        if (selectedImageIndex !== null) {
+            return product.imageUrls[selectedImageIndex];
+        }
+
+        return product.imageUrls[0];
+    };
+
+    if (loading) {
+        return <div className="flex justify-center items-center min-h-screen">Đang tải...</div>;
+    }
+
     if (!product) {
-        return <div>Loading...</div>;
+        return <div className="flex justify-center items-center min-h-screen">Không tìm thấy sản phẩm</div>;
     }
 
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex flex-wrap -mx-4">
+                {/* Phần hiển thị hình ảnh sản phẩm */}
                 <div className="w-full md:w-1/2 px-4 mb-8">
-                    <Carousel autoplay>
+                    {/* Hình ảnh lớn */}
+                    <div className="relative aspect-square mb-4">
+                        <Image
+                            src={getCurrentDisplayImage()}
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                    </div>
+
+                    {/* Danh sách hình ảnh nhỏ */}
+                    <div className="flex gap-2">
                         {product.imageUrls.map((url, index) => (
-                            <div key={index}>
-                                <Image src={url} alt={`Product image ${index + 1}`} width={500} height={500} className="w-full h-auto" />
-                            </div>
-                        ))}
-                    </Carousel>
-                    <div className="flex mt-4">
-                        {product.imageUrls.map((url, index) => (
-                            <div key={index} className="w-1/5 px-1">
-                                <Image src={url} alt={`Thumbnail ${index + 1}`} width={100} height={100} className="w-full h-auto cursor-pointer" />
+                            <div
+                                key={index}
+                                className={`relative w-20 aspect-square cursor-pointer transition-all
+                                    ${selectedImageIndex === index ? 'border-2 border-blue-500' : 'border border-gray-200'}
+                                    hover:border-blue-300`}
+                                onMouseEnter={() => handleThumbnailHover(index)}
+                                onMouseLeave={handleThumbnailLeave}
+                                onClick={() => handleThumbnailClick(index)}
+                            >
+                                <Image
+                                    src={url}
+                                    alt={`Thumbnail ${index + 1}`}
+                                    fill
+                                    className="object-cover"
+                                />
                             </div>
                         ))}
                     </div>
                 </div>
+
+                {/* Phần thông tin sản phẩm */}
                 <div className="w-full md:w-1/2 px-4">
                     <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
                     <p className="text-gray-600 mb-4">{product.description}</p>
                     <p className="text-2xl font-bold text-red-600 mb-4">${product.price.toFixed(2)}</p>
+
+                    {/* Phần chính sách */}
                     <div className="mb-4">
                         <p className="font-bold">Chính Sách Trả Hàng</p>
                         <p>Trả hàng 15 ngày</p>
@@ -107,38 +251,48 @@ const ProductDetailPage: React.FC = () => {
                         <p className="font-bold">Vận Chuyển</p>
                         <p>Miễn phí vận chuyển</p>
                     </div>
+
+                    {/* Phần lựa chọn màu sắc */}
                     {product.colors && product.colors.length > 0 && (
                         <div className="mb-4">
                             <p className="font-bold mb-2">Màu Sắc</p>
-                            <div className="flex flex-wrap">
+                            <div className="flex flex-wrap gap-2">
                                 {product.colors.map((color) => (
-                                    <div key={color.id} className="flex items-center mr-2 mb-2">
-                                        <Image
-                                            src={color.imageUrl}
-                                            alt={color.name}
-                                            width={50}
-                                            height={50}
-                                            className="mr-2"
-                                        />
+                                    <div key={color.id} className="flex items-center">
                                         <button
-                                            className={`px-4 py-2 border rounded ${selectedColor === color.name ? 'border-blue-500' : 'border-gray-300'}`}
+                                            className={`flex items-center px-4 py-2 border rounded-lg transition-all
+                                                ${selectedColor === color.name
+                                                ? 'border-blue-500 bg-blue-50'
+                                                : 'border-gray-300 hover:border-blue-300'}`}
                                             onClick={() => setSelectedColor(color.name)}
                                         >
-                                            {color.name}
+                                            <Image
+                                                src={color.imageUrl}
+                                                alt={color.name}
+                                                width={24}
+                                                height={24}
+                                                className="mr-2 rounded-full"
+                                            />
+                                            <span>{color.name}</span>
                                         </button>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
+
+                    {/* Phần lựa chọn kích thước */}
                     {product.availableSizes && product.availableSizes.length > 0 && (
                         <div className="mb-4">
                             <p className="font-bold mb-2">Kích Thước</p>
-                            <div className="flex flex-wrap">
+                            <div className="flex flex-wrap gap-2">
                                 {product.availableSizes.map((size) => (
                                     <button
                                         key={size}
-                                        className={`mr-2 mb-2 px-4 py-2 border rounded ${selectedSize === size ? 'border-blue-500' : 'border-gray-300'}`}
+                                        className={`px-4 py-2 border rounded-lg transition-all
+                                            ${selectedSize === size
+                                            ? 'border-blue-500 bg-blue-50'
+                                            : 'border-gray-300 hover:border-blue-300'}`}
                                         onClick={() => setSelectedSize(size)}
                                     >
                                         {size}
@@ -147,14 +301,19 @@ const ProductDetailPage: React.FC = () => {
                             </div>
                         </div>
                     )}
+
+                    {/* Phần lựa chọn trọng lượng */}
                     {product.availableWeights && product.availableWeights.length > 0 && (
                         <div className="mb-4">
                             <p className="font-bold mb-2">Trọng Lượng</p>
-                            <div className="flex flex-wrap">
+                            <div className="flex flex-wrap gap-2">
                                 {product.availableWeights.map((weight) => (
                                     <button
                                         key={weight}
-                                        className={`mr-2 mb-2 px-4 py-2 border rounded ${selectedWeight === weight ? 'border-blue-500' : 'border-gray-300'}`}
+                                        className={`px-4 py-2 border rounded-lg transition-all
+                                            ${selectedWeight === weight
+                                            ? 'border-blue-500 bg-blue-50'
+                                            : 'border-gray-300 hover:border-blue-300'}`}
                                         onClick={() => setSelectedWeight(weight)}
                                     >
                                         {weight}
@@ -163,43 +322,56 @@ const ProductDetailPage: React.FC = () => {
                             </div>
                         </div>
                     )}
-                    <div className="mb-4">
+
+                    {/* Phần chọn số lượng */}
+                    <div className="mb-6">
                         <p className="font-bold mb-2">Số Lượng</p>
-                        <div className="flex items-center">
+                        <div className="flex items-center space-x-2">
                             <button
-                                className="px-3 py-1 border rounded-l"
+                                className="w-8 h-8 flex items-center justify-center border rounded-lg hover:bg-gray-100"
                                 onClick={() => handleQuantityChange(quantity - 1)}
+                                disabled={quantity <= 1}
                             >
                                 -
                             </button>
                             <input
                                 type="number"
-                                className="w-16 px-2 py-1 border-t border-b text-center"
+                                className="w-20 px-2 py-1 border rounded-lg text-center"
                                 value={quantity}
                                 onChange={(e) => handleQuantityChange(parseInt(e.target.value))}
                                 min={1}
                                 max={product.stockQuantity}
                             />
                             <button
-                                className="px-3 py-1 border rounded-r"
+                                className="w-8 h-8 flex items-center justify-center border rounded-lg hover:bg-gray-100"
                                 onClick={() => handleQuantityChange(quantity + 1)}
+                                disabled={quantity >= product.stockQuantity}
                             >
                                 +
                             </button>
+                            <span className="text-gray-600 ml-2">
+                                {product.stockQuantity} sản phẩm có sẵn
+                            </span>
                         </div>
                     </div>
+
+                    {/* Phần nút thao tác */}
                     <div className="flex space-x-4">
                         <button
-                            className="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+                            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700
+                                     transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             onClick={handleAddToCart}
+                            disabled={product.stockQuantity === 0}
                         >
-                            Thêm Vào Giỏ Hàng
+                            {product.stockQuantity === 0 ? 'Hết hàng' : 'Thêm Vào Giỏ Hàng'}
                         </button>
                         <button
-                            className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                            className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700
+                                     transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             onClick={handleBuyNow}
+                            disabled={product.stockQuantity === 0}
                         >
-                            Mua Ngay
+                            {product.stockQuantity === 0 ? 'Hết hàng' : 'Mua Ngay'}
                         </button>
                     </div>
                 </div>

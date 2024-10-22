@@ -1,4 +1,5 @@
-import ProductList from '@/components/ProductList';
+import AdminProductList from '@/components/AdminProductList';
+import ClientProductList from '@/components/ClientProductList';
 import HeaderHomepage from "@/components/HeaderHomepage";
 import Footer from "@/components/Footer";
 
@@ -7,7 +8,7 @@ export default function Home() {
           <div>
               <HeaderHomepage />
               <main>
-                  <ProductList />
+                  <ClientProductList />
               </main>
             <Footer />
           </div>

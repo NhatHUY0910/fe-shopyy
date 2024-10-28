@@ -34,6 +34,9 @@ const ProductDetailPage: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [hoveredImageIndex, setHoveredImageIndex] = useState<number | null>(null);
     const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+    const [hoveredColorId, setHoveredColorId] = useState<number | null>(null);
+    const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
+    const [defaultImage, setDefaultImage] = useState<string>('');
 
     useEffect(() => {
         const fetchProductDetail = async () => {
@@ -48,6 +51,12 @@ const ProductDetailPage: React.FC = () => {
                     throw new Error('Failed to fetch product details');
                 }
                 const data = await response.json();
+                // Kiểm tra và xử lý dữ liệu trước khi set state
+                if (data && data.imageUrls) {
+                    // Đảm bảo imageUrls là một mảng
+                    data.imageUrls = Array.isArray(data.imageUrls) ? data.imageUrls : [];
+                    setDefaultImage(data.imageUrls[0] || '/placeholder-image.png');
+                }
                 console.log("Received product data:", data);
                 setProduct(data);
 
@@ -171,22 +180,70 @@ const ProductDetailPage: React.FC = () => {
 
     // Hàm xử lý khi click vào hình ảnh nhỏ
     const handleThumbnailClick = (index: number) => {
-        setSelectedImageIndex(selectedImageIndex === index ? null : index);
+        if (selectedImageIndex === index) {
+            setSelectedImageIndex(null);
+        } else {
+            setSelectedImageIndex(index);
+            // Reset color selection khi chọn thumbnail mới
+            setSelectedColorId(null);
+        }
+    };
+
+    // Xử lý hover và click cho màu sắc
+    const handleColorHover = (colorId: number) => {
+        setHoveredColorId(colorId);
+    };
+
+    const handleColorLeave = () => {
+        setHoveredColorId(null);
+    };
+
+    const handleColorClick = (colorId: number, colorName: string) => {
+        if (selectedColorId === colorId) {
+            setSelectedColorId(null);
+            setSelectedColor('');
+        } else {
+            setSelectedColorId(colorId);
+            setSelectedColor(colorName);
+            // Reset thumbnail selection khi chọn màu mới
+            setSelectedImageIndex(null);
+        }
     };
 
     // Hàm để xác định hình ảnh nào sẽ được hiển thị trong phần hình ảnh lớn
     const getCurrentDisplayImage = (): string => {
-        if (!product || !product.imageUrls.length) return '';
+        if (!product || (!product.imageUrls?.length && !product.colors?.length)) {
+            return '/placeholder-image.png';
+        }
 
-        if (hoveredImageIndex !== null) {
+        // Ưu tiên hiển thị hình ảnh màu đang hover
+        if (hoveredColorId !== null) {
+            const hoveredColor = product.colors?.find(color => color.id === hoveredColorId);
+            if (hoveredColor?.imageUrl) {
+                return hoveredColor.imageUrl;
+            }
+        }
+
+        // Tiếp theo là hình ảnh thumbnail đang hover
+        if (hoveredImageIndex !== null && product.imageUrls[hoveredImageIndex]) {
             return product.imageUrls[hoveredImageIndex];
         }
 
-        if (selectedImageIndex !== null) {
+        // Tiếp theo là hình ảnh màu đang được chọn
+        if (selectedColorId !== null) {
+            const selectedColor = product.colors?.find(color => color.id === selectedColorId);
+            if (selectedColor?.imageUrl) {
+                return selectedColor.imageUrl;
+            }
+        }
+
+        // Tiếp theo là hình ảnh thumbnail đang được chọn
+        if (selectedImageIndex !== null && product.imageUrls[selectedImageIndex]) {
             return product.imageUrls[selectedImageIndex];
         }
 
-        return product.imageUrls[0];
+        // Cuối cùng là hình ảnh mặc định
+        return defaultImage;
     };
 
     if (loading) {
@@ -204,33 +261,45 @@ const ProductDetailPage: React.FC = () => {
                 <div className="w-full md:w-1/2 px-4 mb-8">
                     {/* Hình ảnh lớn */}
                     <div className="relative aspect-square mb-4">
-                        <Image
-                            src={getCurrentDisplayImage()}
-                            alt={product.name}
-                            fill
-                            className="object-cover"
-                            priority
-                        />
+                        {getCurrentDisplayImage() && (
+                            <Image
+                                src={getCurrentDisplayImage()}
+                                alt={product.name || 'Product image'}
+                                fill
+                                className="object-cover"
+                                priority
+                                onError={(e) => {
+                                    const img = e.target as HTMLImageElement;
+                                    img.src = '/placeholder-image.png';
+                                }}
+                            />
+                        )}
                     </div>
 
                     {/* Danh sách hình ảnh nhỏ */}
                     <div className="flex gap-2">
-                        {product.imageUrls.map((url, index) => (
+                        {product.imageUrls?.map((url, index) => (
                             <div
                                 key={index}
                                 className={`relative w-20 aspect-square cursor-pointer transition-all
-                                    ${selectedImageIndex === index ? 'border-2 border-blue-500' : 'border border-gray-200'}
-                                    hover:border-blue-300`}
+                ${selectedImageIndex === index ? 'border-2 border-blue-500' : 'border border-gray-200'}
+                hover:border-blue-300`}
                                 onMouseEnter={() => handleThumbnailHover(index)}
                                 onMouseLeave={handleThumbnailLeave}
                                 onClick={() => handleThumbnailClick(index)}
                             >
-                                <Image
-                                    src={url}
-                                    alt={`Thumbnail ${index + 1}`}
-                                    fill
-                                    className="object-cover"
-                                />
+                                {url && (
+                                    <Image
+                                        src={url}
+                                        alt={`Thumbnail ${index + 1}`}
+                                        fill
+                                        className="object-cover"
+                                        onError={(e) => {
+                                            const img = e.target as HTMLImageElement;
+                                            img.src = '/placeholder-image.png';
+                                        }}
+                                    />
+                                )}
                             </div>
                         ))}
                     </div>
@@ -258,24 +327,29 @@ const ProductDetailPage: React.FC = () => {
                             <p className="font-bold mb-2">Màu Sắc</p>
                             <div className="flex flex-wrap gap-2">
                                 {product.colors.map((color) => (
-                                    <div key={color.id} className="flex items-center">
-                                        <button
-                                            className={`flex items-center px-4 py-2 border rounded-lg transition-all
-                                                ${selectedColor === color.name
-                                                ? 'border-blue-500 bg-blue-50'
-                                                : 'border-gray-300 hover:border-blue-300'}`}
-                                            onClick={() => setSelectedColor(color.name)}
-                                        >
+                                    <button
+                                        key={color.id}
+                                        className={`flex items-center px-4 py-2 border rounded-lg transition-all
+                                            ${selectedColorId === color.id ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-300'}`}
+                                        onClick={() => handleColorClick(color.id, color.name)}
+                                        onMouseEnter={() => handleColorHover(color.id)}
+                                        onMouseLeave={handleColorLeave}
+                                    >
+                                        {color.imageUrl && (
                                             <Image
                                                 src={color.imageUrl}
-                                                alt={color.name}
+                                                alt={color.name || 'Color image'}
                                                 width={24}
                                                 height={24}
                                                 className="mr-2 rounded-full"
+                                                onError={(e) => {
+                                                    const img = e.target as HTMLImageElement;
+                                                    img.src = '/placeholder-image.jpg';
+                                                }}
                                             />
-                                            <span>{color.name}</span>
-                                        </button>
-                                    </div>
+                                        )}
+                                        <span>{color.name}</span>
+                                    </button>
                                 ))}
                             </div>
                         </div>

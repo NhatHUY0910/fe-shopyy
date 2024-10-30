@@ -12,6 +12,7 @@ interface UpdateProductFormProps {
 }
 
 interface ColorOption {
+    id?: number;
     name: string;
     imageFile?: File;
     imageUrl?: string;
@@ -43,7 +44,11 @@ const UpdateProductForm: React.FC<UpdateProductFormProps> = ({product, onFinish,
             description: product?.description,
             producer: product?.producer,
             categoryId: product?.category?.id,
-            colors: product?.colors || [],
+            colors: product?.colors?.map((color: any) => ({
+                id: color.id,
+                name: color.name,
+                imageUrl: color.imageUrl
+            })) || [],
             availableSizes: product?.availableSizes || [],
             availableWeights: product?.availableWeights || [],
         });
@@ -123,11 +128,15 @@ const UpdateProductForm: React.FC<UpdateProductFormProps> = ({product, onFinish,
 
             // Append colors
             values.colors?.forEach((color: ColorOption, index: number) => {
+                if (color.id) {
+                    formData.append(`colors[${index}].id`, color.id.toString());
+                }
                 formData.append(`colors[${index}].name`, color.name);
                 if (color.imageFile) {
                     formData.append(`colors[${index}].imageFile`, color.imageFile);
                 }
-                if (color.imageUrl) {
+                // Thêm imageUrl hiện tại nếu không có file mới
+                if (!color.imageFile && color.imageUrl) {
                     formData.append(`colors[${index}].imageUrl`, color.imageUrl);
                 }
             });

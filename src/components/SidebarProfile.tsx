@@ -1,7 +1,6 @@
 import React from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { HomeOutlined, UserOutlined, ShoppingOutlined, BellOutlined, WalletOutlined } from '@ant-design/icons';
+import { HomeOutlined, UserOutlined, ShoppingOutlined, BellOutlined, WalletOutlined, LockOutlined } from '@ant-design/icons';
 
 const ProfileSidebar: React.FC = () => {
     const router = useRouter();
@@ -9,6 +8,7 @@ const ProfileSidebar: React.FC = () => {
     const menuItems = [
         { icon: <HomeOutlined />, text: 'Trang chủ', path: '/' },
         { icon: <UserOutlined />, text: 'Thông tin cá nhân', path: '/profile' },
+        { icon: <LockOutlined />, text: 'Quên mật khẩu', path: '/reset-password' },
         { icon: <ShoppingOutlined />, text: 'Đơn mua', path: '#' },
         { icon: <BellOutlined />, text: 'Thông báo', path: '#' },
         { icon: <WalletOutlined />, text: 'Ví của tôi', path: '#' },

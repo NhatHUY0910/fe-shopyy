@@ -249,7 +249,7 @@ const CartItemList = () => {
             render: (text: string, record: CartItem) => (
                 <div className="flex items-center">
                     <Image
-                        src={record.imageUrl ? `http://localhost:8080/images/${record.imageUrl}` : '/placeholder-image.png'}
+                        src={record.imageUrl || '/placeholder-image.png'}
                         alt={text}
                         width={100}
                         height={100}

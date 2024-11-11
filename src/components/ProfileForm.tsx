@@ -25,7 +25,11 @@ const ProfileForm: React.FC = () => {
     const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
-        if (user) {
+        if (user && (
+            user.username !== profile.username ||
+            user.email !== profile.email ||
+            user.avatarUrl !== profile.avatarUrl
+        )) {
             setProfile({
                 username: user.username || '',
                 email: user.email || '',
@@ -126,7 +130,7 @@ const ProfileForm: React.FC = () => {
                         <div className="mt-6 space-x-4">
                             <button
                                 onClick={handleSubmit}
-                                className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+                                className="px-4 py-2 bg-[#0866FF] text-white rounded hover:bg-[#0757E1]"
                             >
                                 Lưu
                             </button>
@@ -140,7 +144,7 @@ const ProfileForm: React.FC = () => {
                     ) : (
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="mt-6 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+                            className="mt-6 px-4 py-2 bg-[#0866FF] text-white rounded hover:bg-[#0757E1]"
                         >
                             Sửa hồ sơ
                         </button>
@@ -175,7 +179,7 @@ const ProfileForm: React.FC = () => {
                                 <label
                                     htmlFor="avatar-upload"
                                     className={`cursor-pointer ${
-                                        isUploading ? 'text-gray-500' : 'text-orange-500 hover:text-orange-600'
+                                        isUploading ? 'text-gray-500' : 'text-[#0866FF] hover:text-[#0757E1]'
                                     }`}
                                 >
                                     {isUploading ? 'Đang tải...' : 'Chọn ảnh'}

@@ -8,7 +8,7 @@ interface Product {
     name: string;
     price: number;
     quantity: number;
-    imageUrl: String;
+    imageUrl: string;
 }
 
 interface PaymentSummaryProps {
@@ -32,7 +32,7 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
             render: (text: string, record: Product) => (
                 <div className="flex items-center">
                     <Image
-                        src={record.imageUrl ? `http://localhost:8080/images/${record.imageUrl}` : '/placeholder-image.png'}
+                        src={record.imageUrl || '/placeholder-image.png'}
                         alt={text}
                         width={100}
                         height={100}

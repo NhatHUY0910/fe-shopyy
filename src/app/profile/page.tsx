@@ -1,23 +1,35 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
 import Sidebar from '@/components/SidebarProfile';
 import ProfileForm from '@/components/ProfileForm';
 
 export default function ProfilePage() {
-    const { user, loading } = useAuthContext();
+    const { user, loading, checkAuthStatus } = useAuthContext();
     const router = useRouter();
+    const [isChecking, setIsChecking] = useState(true);
 
     useEffect(() => {
-        if (!loading && !user) {
-            router.push('/login');
-        }
-    }, [user, loading, router]);
+        const checkAuth = async () => {
+            await checkAuthStatus(); // Kiểm tra trạng thái xác thực
+            const token = localStorage.getItem('token');
+            if (!loading && (!user || !token)) {
+                router.push('/login');
+            }
+            setIsChecking(false);
+        };
 
-    if (loading || !user) {
+        checkAuth();
+    }, [user, loading, router, checkAuthStatus]);
+
+    if (loading || isChecking) {
         return <div>Loading...</div>;
+    }
+
+    if (!user) {
+        return null;
     }
 
     return (

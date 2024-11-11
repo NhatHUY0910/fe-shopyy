@@ -5,7 +5,7 @@ import Link from "next/link"
 import {useEffect, useRef, useState} from "react";
 import Image from "next/image";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {fab, faFacebook, faInstagram, faShopify} from "@fortawesome/free-brands-svg-icons";
+import {faFacebook, faInstagram, faShopify} from "@fortawesome/free-brands-svg-icons";
 import {faBell, faCircleQuestion, faGlobe, faSearch, faShoppingCart, faUser, faSignOutAlt, faUserCircle} from "@fortawesome/free-solid-svg-icons";
 import {useAuth} from "@/hooks/useAuth";
 import {debounce} from "lodash";
